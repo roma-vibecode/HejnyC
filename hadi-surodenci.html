@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hadí Súrodenci - Hejného Metóda</title>
+    <style>
+        :root {
+            --primary: #2980b9;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --snake-a: #e67e22;
+            --snake-b: #2980b9;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            margin: 0;
+            padding: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .app-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 500px;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            margin: 0;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            background: #edf2f7;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .snake-container {
+            background: #fafafa;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .snake-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding-left: 5px;
+        }
+
+        .snake-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 0;
+        }
+
+        .node {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #cbd5e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #2d3748;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+
+        .node.active {
+            border-color: #3182ce;
+            background: #ebf8ff;
+            transform: scale(1.15);
+            color: #2b6cb0;
+        }
+
+        .arrow-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            flex-shrink: 0;
+            min-width: 55px;
+        }
+
+        .arrow-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #334155;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 32px;
+        }
+
+        .arrow-input {
+            width: 55px;
+            height: 28px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: 2px solid #a0aec0;
+            border-radius: 4px;
+            padding: 0;
+            background: white;
+            color: #1a202c;
+        }
+
+        .arrow-input:disabled {
+            background: #e2e8f0;
+            color: #4a5568;
+            border-color: #cbd5e0;
+        }
+
+        .svg-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .verify-box {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .verify-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .verify-inputs label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4a5568;
+            white-space: nowrap;
+        }
+
+        .verify-inputs input {
+            flex: 1;
+            height: 36px;
+            border: 2px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 0 10px;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        button.btn-action {
+            height: 42px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        button.btn-action:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .msg-area {
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            padding: 4px 8px;
+            margin-top: 5px;
+        }
+
+        .msg-err { background: #fed7d7; color: #9b2c2c; }
+        .msg-ok { background: #c6f6d5; color: #22543d; }
+
+        .hidden { display: none !important; }
+
+        .start-screen, .end-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .start-screen input {
+            height: 42px;
+            border: 2px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 0 12px;
+            font-size: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-card">
+    <!-- START SCREEN -->
+    <div id="screen-start" class="start-screen">
+        <h1>Hadí Súrodenci</h1>
+        <p style="font-size: 0.9rem; color: #718096; margin: 0;">Zadaj svoje meno a nájdi súrodeneckých hadov!</p>
+        <input type="text" id="inp-student-name" placeholder="Meno a priezvisko" autocomplete="off">
+        <p style="font-size: 0.8rem; color: #e53e3e; margin: 0; font-weight: 500;">
+            ⚠️ Počas hry neprepínaj karty prehliadača, inak sa hra ukončí!
+        </p>
+        <button class="btn-action" onclick="startGame()">Začať hru</button>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game" class="hidden">
+        <div class="stats-row">
+            <div>Level: <span id="lbl-level">1</span>/10</div>
+            <div>Životy: <span id="lbl-lives">❤️ 10</span></div>
+            <div>Overenie: <span id="lbl-verify">0/2</span></div>
+        </div>
+
+        <div class="snake-container">
+            <div class="snake-title" style="color: var(--snake-a);">Zadaný had:</div>
+            <div id="vis-orig" class="snake-visual"></div>
+        </div>
+
+        <div class="snake-container">
+            <div class="snake-title" style="color: var(--snake-b);">Súrodenecký had:</div>
+            <div id="vis-sibl" class="snake-visual"></div>
+        </div>
+
+        <div class="verify-box">
+            <div class="verify-inputs">
+                <label for="inp-test-x">Vstupné x:</label>
+                <input type="number" id="inp-test-x" placeholder="Akékoľvek celé číslo">
+            </div>
+            <button id="btn-verify" class="btn-action" onclick="runVerification()">Overiť</button>
+        </div>
+
+        <div id="msg-box" class="msg-area"></div>
+    </div>
+
+    <!-- END SCREEN -->
+    <div id="screen-end" class="end-screen hidden">
+        <h2 id="end-title" style="margin:0; font-size: 1.4rem;"></h2>
+        <p id="end-desc" style="font-size: 0.95rem; color: #4a5568; margin: 0;"></p>
+        <div id="end-stats" style="font-size: 1rem; font-weight: bold; background: #edf2f7; padding: 15px; border-radius: 8px; line-height: 1.6;"></div>
+    </div>
+</div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwigB5DcoRD-uvEm0RbcE91guekyf-AKkJYwZQBolq6rQaLO_8zag9qbftK9V28PLyL4w/exec";
+
+    let studentName = "";
+    let currentLevel = 1;
+    let lives = 10;
+    let startTime = null;
+    let verificationCount = 0;
+    let usedInputs = [];
+    let isGameActive = false;
+    let isAnimating = false;
+
+    let currentData = {};
+
+    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function randSign() { return Math.random() < 0.5 ? 1 : -1; }
+
+    function startGame() {
+        const nameInp = document.getElementById("inp-student-name").value.trim();
+        if (!nameInp) { alert("Prosím, zadaj svoje meno!"); return; }
+        studentName = nameInp;
+        
+        document.getElementById("screen-start").classList.add("hidden");
+        document.getElementById("screen-game").classList.remove("hidden");
+        startTime = new Date();
+        isGameActive = true;
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && isGameActive) {
+                isGameActive = false;
+                endGame("Opustenie aplikácie", "Hra bola predčasne ukončená, pretože si prepol kartu alebo opustil appku.");
+            }
+        });
+
+        loadLevel(currentLevel);
+    }
+
+    function resetVerificationCounter() {
+        if (verificationCount !== 0) {
+            verificationCount = 0;
+            usedInputs = [];
+            document.getElementById("lbl-verify").innerText = "0/2";
+            const msgBox = document.getElementById("msg-box");
+            msgBox.innerHTML = "";
+            msgBox.className = "msg-area";
+        }
+    }
+
+    function generateLevelData(level) {
+        let origOps = [], siblOps = [], knownQ1 = null, knownQ2 = null;
+
+        if (level <= 6) {
+            let carryRight = [1, 2, 4, 5].includes(level); 
+            
+            let a = rand(1, 8) * randSign();
+            let b = rand(2, 5); 
+
+            if (!carryRight) {
+                origOps = [{t: a > 0 ? '+' : '-', v: Math.abs(a)}, {t: '*', v: b}];
+                let sum = a * b;
+                siblOps = [{t: '*', v: b}, {t: sum > 0 ? '+' : '-', v: Math.abs(sum)}];
+            } else {
+                let c = a * b;
+                origOps = [{t: '*', v: b}, {t: c > 0 ? '+' : '-', v: Math.abs(c)}];
+                siblOps = [{t: a > 0 ? '+' : '-', v: Math.abs(a)}, {t: '*', v: b}];
+            }
+
+            if (level <= 3) {
+                if (level === 1) knownQ1 = siblOps[0].v;
+                else knownQ2 = siblOps[1].v;
+            }
+        } else if (level <= 9) {
+            let a, b, c, sum;
+            do {
+                a = rand(1, 6) * randSign();
+                b = rand(2, 4);
+                c = rand(1, 8) * randSign();
+                sum = a * b + c;
+            } while (sum === 0);
+            
+            origOps = [
+                {t: a > 0 ? '+' : '-', v: Math.abs(a)},
+                {t: '*', v: b},
+                {t: c > 0 ? '+' : '-', v: Math.abs(c)}
+            ];
+            siblOps = [
+                {t: '*', v: b},
+                {t: sum > 0 ? '+' : '-', v: Math.abs(sum)}
+            ];
+        } else {
+            let a, b, c, d, mult, sum;
+            do {
+                a = rand(1, 4) * randSign();
+                b = rand(2, 3);
+                c = rand(1, 5) * randSign();
+                d = rand(2, 3);
+                mult = b * d;
+                sum = (a * b + c) * d;
+            } while (sum === 0);
+            
+            origOps = [
+                {t: a > 0 ? '+' : '-', v: Math.abs(a)},
+                {t: '*', v: b},
+                {t: c > 0 ? '+' : '-', v: Math.abs(c)},
+                {t: '*', v: d}
+            ];
+            siblOps = [
+                {t: '*', v: mult},
+                {t: sum > 0 ? '+' : '-', v: Math.abs(sum)}
+            ];
+        }
+
+        return { origOps, siblOps, knownQ1, knownQ2 };
+    }
+
+    function loadLevel(level) {
+        verificationCount = 0;
+        usedInputs = [];
+        isAnimating = false;
+
+        document.getElementById("lbl-level").innerText = level;
+        document.getElementById("lbl-lives").innerText = "❤️ " + lives;
+        document.getElementById("lbl-verify").innerText = "0/2";
+        document.getElementById("msg-box").innerHTML = "";
+        document.getElementById("msg-box").className = "msg-area";
+        document.getElementById("inp-test-x").value = "";
+        document.getElementById("btn-verify").disabled = false;
+
+        currentData = generateLevelData(level);
+        renderSnake("vis-orig", currentData.origOps, false);
+        renderSnake("vis-sibl", currentData.siblOps, true);
+    }
+
+    function renderSnake(containerId, ops, isEditable) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+
+        const node0 = document.createElement("div");
+        node0.className = "node";
+        node0.id = `${containerId}-node-0`;
+        node0.innerText = "x";
+        container.appendChild(node0);
+
+        ops.forEach((op, idx) => {
+            const arrowGroup = document.createElement("div");
+            arrowGroup.className = "arrow-group";
+            
+            const label = document.createElement("div");
+            label.className = "arrow-label";
+
+            let sym = op.t === '*' ? '·' : (op.t === '-' ? '−' : '+');
+
+            if (isEditable) {
+                const spanSym = document.createElement("span");
+                spanSym.innerText = sym;
+                
+                const inp = document.createElement("input");
+                inp.type = "number";
+                inp.className = "arrow-input";
+                inp.id = `sibl-q-${idx}`;
+                inp.oninput = resetVerificationCounter;
+
+                if (idx === 0 && currentData.knownQ1 !== null) {
+                    inp.value = currentData.knownQ1;
+                    inp.disabled = true;
+                } else if (idx === 1 && currentData.knownQ2 !== null) {
+                    inp.value = currentData.knownQ2;
+                    inp.disabled = true;
+                }
+
+                label.appendChild(spanSym);
+                label.appendChild(inp);
+            } else {
+                label.innerText = `${sym} ${op.v}`;
+            }
+
+            const svgArrow = document.createElement("div");
+            svgArrow.className = "svg-arrow";
+            svgArrow.innerHTML = `<svg width="55" height="12" viewBox="0 0 55 12"><line x1="0" y1="6" x2="49" y2="6" stroke="#94a3b8" stroke-width="2.5"/><polygon points="48,1 55,6 48,11" fill="#94a3b8"/></svg>`;
+
+            arrowGroup.appendChild(label);
+            arrowGroup.appendChild(svgArrow);
+            container.appendChild(arrowGroup);
+
+            const node = document.createElement("div");
+            node.className = "node";
+            node.id = `${containerId}-node-${idx + 1}`;
+            container.appendChild(node);
+        });
+    }
+
+    function evalOpsWithSteps(x, ops) {
+        let steps = [x];
+        let curr = x;
+        for (let op of ops) {
+            if (op.t === '+') curr += op.v;
+            else if (op.t === '-') curr -= op.v;
+            else if (op.t === '*') curr *= op.v;
+            steps.push(curr);
+        }
+        return steps;
+    }
+
+    async function runVerification() {
+        if (isAnimating) return;
+        const msgBox = document.getElementById("msg-box");
+        
+        const q0El = document.getElementById("sibl-q-0");
+        const q1El = document.getElementById("sibl-q-1");
+
+        const q0Val = parseInt(q0El.value);
+        const q1Val = parseInt(q1El.value);
+        const testX = parseInt(document.getElementById("inp-test-x").value);
+
+        if (isNaN(q0Val) || isNaN(q1Val)) {
+            msgBox.innerHTML = "Doplň obidva kvocienty!";
+            msgBox.className = "msg-area msg-err"; return;
+        }
+        if (isNaN(testX)) {
+            msgBox.innerHTML = "Zadaj vstupné číslo x!";
+            msgBox.className = "msg-area msg-err"; return;
+        }
+        if (usedInputs.includes(testX)) {
+            msgBox.innerHTML = "Toto x si už použil. Zadaj iné!";
+            msgBox.className = "msg-area msg-err"; return;
+        }
+
+        isAnimating = true;
+        document.getElementById("btn-verify").disabled = true;
+        msgBox.innerHTML = "";
+        msgBox.className = "msg-area";
+
+        const userSiblOps = [
+            { t: currentData.siblOps[0].t, v: q0Val },
+            { t: currentData.siblOps[1].t, v: q1Val }
+        ];
+
+        const origSteps = evalOpsWithSteps(testX, currentData.origOps);
+        const siblSteps = evalOpsWithSteps(testX, userSiblOps);
+
+        const delay = 150;
+
+        for (let i = 0; i < origSteps.length; i++) {
+            const nOrig = document.getElementById(`vis-orig-node-${i}`);
+            nOrig.classList.add("active");
+            nOrig.innerText = origSteps[i];
+            await new Promise(r => setTimeout(r, delay));
+            nOrig.classList.remove("active");
+        }
+
+        for (let i = 0; i < siblSteps.length; i++) {
+            const nSibl = document.getElementById(`vis-sibl-node-${i}`);
+            nSibl.classList.add("active");
+            nSibl.innerText = siblSteps[i];
+            await new Promise(r => setTimeout(r, delay));
+            nSibl.classList.remove("active");
+        }
+
+        const finalOrig = origSteps[origSteps.length - 1];
+        const finalSibl = siblSteps[siblSteps.length - 1];
+
+        if (finalOrig === finalSibl) {
+            verificationCount++;
+            usedInputs.push(testX);
+            document.getElementById("lbl-verify").innerText = `${verificationCount}/2`;
+
+            if (verificationCount === 2) {
+                msgBox.innerHTML = "Správne! Postupuješ do ďalšieho levelu.";
+                msgBox.className = "msg-area msg-ok";
+                setTimeout(() => {
+                    currentLevel++;
+                    if (currentLevel > 10) endGame("Výborne!", "Úspešne si prešiel všetkých 10 levelov!");
+                    else loadLevel(currentLevel);
+                }, 1000);
+            } else {
+                msgBox.innerHTML = `Overenie sedí! Zadaj 2. číslo.`;
+                msgBox.className = "msg-area msg-ok";
+                document.getElementById("inp-test-x").value = "";
+                document.getElementById("btn-verify").disabled = false;
+                isAnimating = false;
+            }
+        } else {
+            lives--;
+            document.getElementById("lbl-lives").innerText = "❤️ " + lives;
+            msgBox.innerHTML = `Nezhoda! Pre x=${testX}: ${finalOrig} ≠ ${finalSibl}.`;
+            msgBox.className = "msg-area msg-err";
+
+            verificationCount = 0;
+            usedInputs = [];
+            document.getElementById("lbl-verify").innerText = "0/2";
+
+            if (lives <= 0) setTimeout(() => endGame("Koniec hry", "Minul si všetky životy."), 1200);
+            else {
+                document.getElementById("btn-verify").disabled = false;
+                isAnimating = false;
+            }
+        }
+    }
+
+    function endGame(title, desc) {
+        isGameActive = false;
+        document.getElementById("screen-game").classList.add("hidden");
+        document.getElementById("screen-end").classList.remove("hidden");
+
+        const endTime = new Date();
+        const durationSec = Math.floor((endTime - startTime) / 1000);
+        const mins = Math.floor(durationSec / 60);
+        const secs = durationSec % 60;
+        
+        let maxSolvedLevel = currentLevel - 1;
+        if (title.includes("Výborne")) maxSolvedLevel = 10;
+
+        document.getElementById("end-title").innerText = title;
+        document.getElementById("end-desc").innerText = desc;
+        document.getElementById("end-stats").innerHTML = `
+            Žiak: ${studentName}<br>
+            Zvládnutý level: ${maxSolvedLevel}/10<br>
+            Čas: ${mins}m ${secs}s
+        `;
+
+        if (GOOGLE_SCRIPT_URL) {
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST", mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ meno: studentName, level: maxSolvedLevel, cas: `${mins}m ${secs}s`, status: title })
+            }).catch(e => console.log(e));
+        }
+    }
+</script>
+</body>
+</html>
